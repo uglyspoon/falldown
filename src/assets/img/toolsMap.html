@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <style>
+    #app {
+      position: relative;
+      width: 750px;
+      height: 600px;
+      margin: 0 auto;
+      background: #ccc url('map.svg') center center no-repeat;
+    }
+    .active{
+      fill: #fff;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+
+</div>
+<script src="../../bower_components/jquery/dist/jquery.js"></script>
+<script src="../../bower_components/d3/d3.js"></script>
+<script src="../../bower_components/underscore/underscore-min.js"></script>
+<script>
+  var width = 750;
+  var height = 600;
+  var columnNumber = 50;
+  var r = Math.floor(width / (2 * columnNumber * Math.cos(Math.PI / 6)));
+  var grids = getGrid(width, height, columnNumber, r);
+  var hexagons = grids.map( d => getRegularHexagon(d, r));
+  var svg = d3.select('#app')
+              .append('svg')
+              .attr('width', width)
+              .attr('height', height);
+
+
+
+  console.log(grids, hexagons)
+
+  svg.selectAll('circle.circle')
+    .data(grids)
+    .enter()
+    .append('circle')
+    .attr('class' , 'circle')
+    .attr('cx', d=> d[0])
+    .attr('cy', d=> d[1])
+    .attr('r', r)
+    .attr('opacity', 0);
+
+
+  svg.selectAll('polygon.hexagon')
+    .data(hexagons)
+    .enter()
+    .append('polygon')
+    .attr('class', 'hexagon')
+    .attr('points', d => {
+        return (d.map(e => e.join(','))).join(' ')
+    })
+    .attr('fill', '#f00')
+    .attr('opacity', 0.5)
+    .attr('stroke', '#fff')
+    .attr('stroke-width', 1)
+    .on('click', function(d) {
+        var classStr = d3.select(this).attr('class');
+        if (classStr.indexOf('active') > - 1) {
+          d3.select(this)
+            .classed('active', false)
+        } else {
+          d3.select(this)
+            .classed('active', true)
+        }
+    })
+
+
+
+
+
+
+  function getGrid(width, height, columnNumber, r) {
+    var grids = []
+    var h = 0;
+    var row = 0;
+    while (h <= height) {
+      var w = 0;
+      var col = 0;
+      while (w <= width) {
+        if (row % 2) {
+          var x = Math.cos(Math.PI / 6) * r * ( 2 * col + 2 );
+        } else {
+          var x = Math.cos(Math.PI / 6) * r * ( 2 * col + 1 );
+        }
+        var y = r + (Math.sin(Math.PI / 6) * r + r) * row;
+        col++;
+        w = x;
+        h = y;
+        if ((w + Math.cos(Math.PI / 6) * r * 2)  <= width && (h +  r) <= height) {
+          grids.push([x, y])
+        }
+      }
+      row++;
+    }
+    return grids
+  }
+
+
+  function getRegularHexagon(point, r) {
+    var x = point[0];
+    var y = point[1];
+    var angle = Math.PI / 6;
+    var p1 = [x, y - r];
+    var p2 = [x + Math.cos(angle) * r, y - Math.sin(angle) * r];
+    var p3 = [x + Math.cos(angle) * r, y + Math.sin(angle) * r];
+    var p4 = [x, y + r];
+    var p5 = [x - Math.cos(angle) * r, y + Math.sin(angle) * r];
+    var p6 = [x - Math.cos(angle) * r, y - Math.sin(angle) * r];
+    var p = [p1, p2, p3, p4, p5, p6];
+    p = _.map(p, function(d) {
+      return _.map(d, function(e) {
+        return parseInt(e);
+      });
+    });
+    return p;
+  }
+
+
+
+
+</script>
+</body>
+</html>
